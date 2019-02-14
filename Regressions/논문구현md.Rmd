@@ -1,0 +1,81 @@
+---
+title: "Elastic Net"
+author: "박정민/위승민/임소현"
+date: "2018년 12월 14일"
+output: word_document
+---
+
+```{r setup, warning=FALSE}
+library(glmnet)
+library(lasso2)
+library(elasticnet)
+data(Prostate, package = "lasso2")
+head(Prostate)
+```
+
+```{r warning=FALSE}
+##### Split into training and test #####
+
+n.obs = dim(Prostate)[1]
+proportion.split = 0.69
+train.index = sample(1:n.obs, round(n.obs * proportion.split))
+
+y = Prostate$lpsa
+X = as.matrix(Prostate[setdiff(colnames(Prostate), "lpsa")])
+
+Xtr = X[train.index,]
+Xte = X[-train.index,]
+ytr = y[train.index]
+yte = y[-train.index]
+
+
+##### Build models #####
+
+for (i in 0:10) {
+  assign(paste("fit", i, sep=""), cv.glmnet(Xtr, ytr, type.measure="mse", 
+                                            alpha=i/10))
+}
+yhat0 <- predict(fit0, s=fit0$lambda.min, newx=Xte)
+yhat1 <- predict(fit1, s=fit1$lambda.min, newx=Xte)
+yhat2 <- predict(fit2, s=fit2$lambda.min, newx=Xte)
+yhat3 <- predict(fit3, s=fit3$lambda.min, newx=Xte)
+yhat4 <- predict(fit4, s=fit4$lambda.min, newx=Xte)
+yhat5 <- predict(fit5, s=fit5$lambda.min, newx=Xte)
+yhat6 <- predict(fit6, s=fit6$lambda.min, newx=Xte)
+yhat7 <- predict(fit7, s=fit7$lambda.min, newx=Xte)
+yhat8 <- predict(fit8, s=fit8$lambda.min, newx=Xte)
+yhat9 <- predict(fit9, s=fit9$lambda.min, newx=Xte)
+yhat10 <- predict(fit10, s=fit10$lambda.min, newx=Xte)
+
+mse0 <- mean((yte - yhat0)^2) # ridge
+ela1 <- mean((yte - yhat1)^2)
+ela2 <- mean((yte - yhat2)^2)
+ela3 <- mean((yte - yhat3)^2)
+ela4 <- mean((yte - yhat4)^2)
+ela5 <- mean((yte - yhat5)^2)
+ela6 <- mean((yte - yhat6)^2)
+ela7 <- mean((yte - yhat7)^2)
+ela8 <- mean((yte - yhat8)^2)
+ela9 <- mean((yte - yhat9)^2)
+mse10 <- mean((yte - yhat10)^2) # lasso
+
+mse <- data.frame(ridge=mse0,ela1,ela2,ela3,ela4,ela5,ela6,ela7,ela8,ela9,lasso=mse10)
+sort(mse)
+```
+### lambda of Ridge and Lasso
+```{r warning=FALSE}
+lasso <- cv.glmnet(Xtr, ytr, alpha = 1)
+plot(lasso)
+
+ridge <- cv.glmnet(Xtr, ytr, alpha = 0)
+plot(ridge)
+```
+
+
+### Coefficents plot of Ridge and Lasso
+```{r warning=FALSE}
+obj.lasso <- enet(Xtr, ytr,lambda=0)
+plot(obj.lasso, use.color=TRUE)
+obj.ela <- enet(Xtr, ytr,lambda=1000)
+plot(obj.ela, use.color=TRUE)
+```
