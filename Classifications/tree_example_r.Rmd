@@ -1,0 +1,76 @@
+---
+title: "Tree Model"
+author: "IMSOHYUN"
+date: "2019년 3월 7일"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+setwd("C:/Users/user/Desktop/I/ewha2/Seminar/Classifications")
+library(party)
+library(dplyr)
+library(caret)
+library(rpart)
+```
+
+```{r warning=FALSE}
+
+data <- read.csv("diabetes.csv")
+colnames(data) <- c('pregnant', 'glucose', 'bp', 'skin', 'insulin', 'bmi', 'pedigree', 'age', 'label')
+head(data)
+count(data,label)
+```
+
+
+### Split data
+```{r warning=FALSE}
+
+set.seed(1000) #reproducability setting
+intrain<-createDataPartition(y=data$label, p=0.7, list=FALSE) 
+train<-data[intrain, ]
+test<-data[-intrain, ]
+```
+
+<br>
+
+### Model -> rpart package  
+```{r warning=FALSE}
+rpartmod<-rpart(label~. , data=train, method="class")
+plot(rpartmod)
+text(rpartmod)
+
+```
+
+
+### 가지치기(PRUNING)
+```{r warning=FALSE}
+printcp(rpartmod)
+plotcp(rpartmod)
+```
+
+
+### 예측, 모델 평가 
+```{r warning=FALSE}
+ptree<-prune(rpartmod, cp= rpartmod$cptable[which.min(rpartmod$cptable[,"xerror"]),"CP"])
+plot(ptree)
+text(ptree)
+rpartpred<-predict(ptree, test, type='class')
+confusionMatrix(rpartpred, as.factor(test$label))
+```
+
+<br>
+
+### Model -> party package 
+```{r warning=FALSE}
+
+train$label = as.factor(train$label)
+partymod<-ctree(label~., data=train)
+plot(partymod)
+partypred<-predict(partymod, test)
+confusionMatrix(partypred, as.factor(test$label))
+```
+
+
+```{r warning=FALSE}
+
+```
